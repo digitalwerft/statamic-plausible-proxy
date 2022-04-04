@@ -1,0 +1,19 @@
+{
+    "name": "digitalwerft/statamic-plausible",
+    "autoload": {
+        "psr-4": {
+            "Digitalwerft\\StatamicPlausible\\": "src"
+        }
+    },
+    "extra": {
+        "statamic": {
+            "name": "Statamic Plausible",
+            "description": "Statamic Plausible addon"
+        },
+        "laravel": {
+            "providers": [
+                "Digitalwerft\\StatamicPlausible\\ServiceProvider"
+            ]
+        }
+    }
+}
