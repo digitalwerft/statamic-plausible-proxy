@@ -1,0 +1,2 @@
+# statamic-plausible-proxy
+ 
