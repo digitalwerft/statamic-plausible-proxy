@@ -1,6 +1,6 @@
 <?php
 
-namespace Digitalwerft\StatamicPlausible\Tags;
+namespace Digitalwerft\PlausibleProxy\Tags;
 
 use Statamic\Tags\Tags;
 use \Illuminate\Support\Facades\Config;
