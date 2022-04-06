@@ -1,6 +1,6 @@
 <?php
 
-namespace Digitalwerft\StatamicPlausible;
+namespace Digitalwerft\PlausibleProxy;
 
 use Statamic\Providers\AddonServiceProvider;
 
