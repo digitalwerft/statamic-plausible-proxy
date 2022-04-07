@@ -1,14 +1,11 @@
 # Statamic Plausible Proxy
 
-> Statamic Plausible Proxy is a Statamic addon that does something pretty neat.
+> Statamic Plausible Proxy is a Statamic addon that simply includes a link tag to plausible. If neccessary events will be proxied so ad-blockers won't block targeting.
 
 ## Features
-
-This addon does:
-
-- This
-- And this
-- And even this
+- `{{ plausible }}` tag for including a link tag to plausible in the `<head>` of the document.
+- Can be used to proxy event requests through statamic first. This is useful if you want to stop ad-blockers from blocking requests to plausible.
+- Option to proxy `pluaisble.js` to prevent ad-blockers from blocking plausible.
 
 ## How to Install
 
@@ -20,4 +17,17 @@ composer require digitalwerft/statamic-plausible
 
 ## How to Use
 
-Here's where you can explain how to use this wonderful addon.
+In your `head` simply include the following tag:
+
+```
+{{ plausible }}
+```
+
+This will render a link tag to plausible.
+
+Use the following .env variables to configure the addon:
+```env
+PLAUSIBLE_SITE="website.com" # url of the website you used to register plausible with
+PLAUSIBLE_ENABLED=false # activate or deactivate the addon entirely (eg. in development mode)
+PLAUSIBLE_PROXY_ENABLED=true # proxy events through statamic
+```

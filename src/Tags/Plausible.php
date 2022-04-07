@@ -5,6 +5,9 @@ namespace Digitalwerft\PlausibleProxy\Tags;
 use Statamic\Tags\Tags;
 use \Illuminate\Support\Facades\Config;
 
+/**
+ * Tag to render a link tag to the plausible script.
+ */
 class Plausible extends Tags
 {
     /**

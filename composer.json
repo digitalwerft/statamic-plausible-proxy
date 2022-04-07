@@ -7,8 +7,8 @@
     },
     "extra": {
         "statamic": {
-            "name": "Statamic Plausible",
-            "description": "Statamic Plausible addon"
+            "name": "Statamic Plausible Proxy",
+            "description": "Statamic Plausible Proxy addon"
         },
         "laravel": {
             "providers": [
