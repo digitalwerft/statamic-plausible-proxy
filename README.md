@@ -5,7 +5,7 @@
 ## Features
 - `{{ plausible }}` tag for including a link tag to plausible in the `<head>` of the document.
 - Can be used to proxy event requests through statamic first. This is useful if you want to stop ad-blockers from blocking requests to plausible.
-- Option to proxy `pluaisble.js` to prevent ad-blockers from blocking plausible.
+- Option to proxy `plausible.js` to prevent ad-blockers from blocking plausible.
 
 ## How to Install
 
