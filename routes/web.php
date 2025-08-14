@@ -13,7 +13,7 @@ Route::get("/pio.js", function (Request $request) {
 
   // Try to get the cached content
   $contents = Cache::remember($cacheKey, 86400, function () { // Cache for 1 day (86400 seconds)
-      $response = Http::get('https://plausible.io/js/plausible.js');
+      $response = Http::get('https://plausible.io/js/script.js');
 
       if ($response->successful()) {
           return $response->body(); // Cache the response body
