@@ -6,49 +6,44 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\Request;
 use App\Http\Middleware\VerifyCsrfToken;
 
-// plausible.io proxy, cache for 1 day 
-Route::get("/pio.js", function (Request $request) {
-  // Define a unique cache key for the script
-  $cacheKey = 'plausible_js_script';
+// plausible.io proxy, cache script for 1 day
+Route::get("/pio.js", function () {
+    $contents = Cache::remember('plausible_js_script', 86400, function () {
+        $response = Http::get('https://plausible.io/js/script.js');
 
-  // Try to get the cached content
-  $contents = Cache::remember($cacheKey, 86400, function () { // Cache for 1 day (86400 seconds)
-      $response = Http::get('https://plausible.io/js/script.js');
+        if ($response->successful()) {
+            return $response->body();
+        }
 
-      if ($response->successful()) {
-          return $response->body(); // Cache the response body
-      }
+        abort(502, 'Unable to fetch the script from the third-party provider.');
+    });
 
-      abort(502, 'Unable to fetch the script from the third-party provider.');
-  });
-
-  // Return the response with appropriate headers
-  return response($contents, 200, ['Content-Type' => 'application/javascript']);
+    return response($contents, 200, [
+        'Content-Type'  => 'application/javascript',
+        'Cache-Control' => 'public, max-age=86400, must-revalidate',
+    ]);
 });
 
+// Forward events to plausible.
 Route::post("/api/event", function (Request $request) {
-  // get payload of request
-  $req = request();
-  $content = $req->getContent();
-  $header = $req->header();
-  $userAgent = array_key_exists('user-agent', $header) ? $header['user-agent'] : '';
-  $clientIp = isset($_SERVER["HTTP_CF_CONNECTING_IP"]) ? $_SERVER["HTTP_CF_CONNECTING_IP"] : $req->ip();
-  $maskedIp = preg_replace('/\.\d+$/', '.1', $clientIp);
+    // Determine the real visitor ip, then anonymise the last octet for privacy
+    // (the full ip must not be passed to a third party without consent).
+    // Requires TrustProxies to be configured so $request->ip() returns the client.
+    $clientIp = $request->header('CF-Connecting-IP') ?: $request->ip();
+    $maskedIp = preg_replace('/\.\d+$/', '.1', $clientIp);
 
-  $headerEvent = [
-    "User-Agent"      => $userAgent,
-    "X-Forwarded-For" => $maskedIp,
-    "Content-Type" => "application/json"
-  ];
-  // send event to plausible, timeout of 10s
+    // Pass through the content type the script actually used (v34 sends text/plain).
+    $contentType = $request->header('Content-Type', 'text/plain');
 
-  $response = Http::withHeaders($headerEvent)->send('POST', 'https://plausible.io/api/event', [
-    'body' => $content
-  ]);
+    $response = Http::withHeaders([
+            'User-Agent'      => $request->userAgent() ?? '',
+            'X-Forwarded-For' => $maskedIp,
+        ])
+        ->withBody($request->getContent(), $contentType)
+        ->post('https://plausible.io/api/event');
 
-  $headerRes = [
-    "Cache-Control"   => "must-revalidate, max-age=0, private"
-  ];
-  // respond only with status code of plausible
-  return response()->json(null, $response->status(), $headerRes);
+    // Mirror plausible's status and surface the dropped header so issues are visible.
+    return response($response->body(), $response->status())
+        ->header('Cache-Control', 'no-store, max-age=0')
+        ->header('x-plausible-dropped', $response->header('x-plausible-dropped') ?: '0');
 })->withoutMiddleware([VerifyCsrfToken::class]);
