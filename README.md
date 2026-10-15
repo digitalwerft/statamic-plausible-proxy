@@ -31,3 +31,13 @@ PLAUSIBLE_SITE="website.com" # url of the website you used to register plausible
 PLAUSIBLE_ENABLED=false # activate or deactivate the addon entirely (eg. in development mode)
 PLAUSIBLE_PROXY_ENABLED=true # proxy events through statamic
 ```
+
+The values are read through `config('plausible-proxy.*')` (see [`config/plausible-proxy.php`](config/plausible-proxy.php)), so the tag keeps working after `php artisan config:cache`. Run `config:cache` again after changing the .env.
+
+## Privacy
+
+With the proxy enabled, the visitor's browser only talks to your site. The addon forwards events to plausible.io with a shortened ip address in `X-Forwarded-For`: IPv4 keeps the first three octets (`203.0.113.77` → `203.0.113.0`), IPv6 the first 48 bits. The full ip never leaves your server. Plausible uses the shortened ip for the country and the daily visitor hash only.
+
+With `PLAUSIBLE_PROXY_ENABLED=false` the script and the events go to plausible.io directly, and Plausible receives the visitor's full ip.
+
+The proxy reads the visitor ip from `CF-Connecting-IP` (Cloudflare) or `$request->ip()`, so `TrustProxies` must be configured when the site sits behind another proxy.

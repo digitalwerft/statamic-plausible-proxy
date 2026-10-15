@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\Request;
 use App\Http\Middleware\VerifyCsrfToken;
+use Digitalwerft\PlausibleProxy\IpAnonymizer;
 
 // plausible.io proxy, cache script for 1 day
 Route::get("/pio.js", function () {
@@ -26,19 +27,20 @@ Route::get("/pio.js", function () {
 
 // Forward events to plausible.
 Route::post("/api/event", function (Request $request) {
-    // Determine the real visitor ip, then anonymise the last octet for privacy
-    // (the full ip must not be passed to a third party without consent).
+    // Determine the real visitor ip and shorten it (IPv4 /24, IPv6 /48):
+    // the full ip must not be passed to a third party without consent.
     // Requires TrustProxies to be configured so $request->ip() returns the client.
     $clientIp = $request->header('CF-Connecting-IP') ?: $request->ip();
-    $maskedIp = preg_replace('/\.\d+$/', '.1', $clientIp);
+    $maskedIp = IpAnonymizer::anonymize($clientIp);
 
     // Pass through the content type the script actually used (v34 sends text/plain).
     $contentType = $request->header('Content-Type', 'text/plain');
 
-    $response = Http::withHeaders([
+    // Without a valid ip no X-Forwarded-For is sent; Plausible then sees only the server ip.
+    $response = Http::withHeaders(array_filter([
             'User-Agent'      => $request->userAgent() ?? '',
             'X-Forwarded-For' => $maskedIp,
-        ])
+        ], fn ($value) => $value !== null))
         ->withBody($request->getContent(), $contentType)
         ->post('https://plausible.io/api/event');
 
